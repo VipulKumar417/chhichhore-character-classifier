@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +33,7 @@
             border-radius: 20px;
             text-align: center;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(233, 69, 96, 0.3);
         }
 
@@ -40,7 +41,7 @@
             color: #e94560;
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
@@ -66,7 +67,7 @@
             background: linear-gradient(180deg, rgba(31, 64, 104, 0.8), rgba(22, 36, 71, 0.9));
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(162, 210, 255, 0.1);
             height: fit-content;
         }
@@ -118,7 +119,7 @@
             background: linear-gradient(145deg, #1f4068, #162447);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(162, 210, 255, 0.1);
         }
 
@@ -211,7 +212,7 @@
             border-radius: 15px;
             padding: 20px;
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
 
         .stat-number {
@@ -258,15 +259,22 @@
             background: linear-gradient(145deg, #1f4068, #162447);
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border-left: 5px solid #e94560;
             transition: all 0.3s ease;
             animation: fadeIn 0.5s ease;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .character-card:hover {
@@ -353,7 +361,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* How it works */
@@ -391,6 +401,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -403,7 +414,7 @@
             <!-- Sidebar -->
             <div class="sidebar">
                 <h2>🎬 Character Guide</h2>
-                
+
                 <div class="character-item">
                     <h4>🎭 ANNI - Aniruddh</h4>
                     <p>Leader, Responsible, Caring</p>
@@ -490,7 +501,8 @@
         </div>
 
         <div class="footer">
-            <p>Built for Hackathon 🚀 | <a href="https://github.com/VipulKumar417/chhichhore-character-classifier" target="_blank">View on GitHub</a></p>
+            <p>Built for Hackathon 🚀 | <a href="https://github.com/VipulKumar417/chhichhore-character-classifier"
+                    target="_blank">View on GitHub</a></p>
         </div>
     </div>
 
@@ -572,31 +584,34 @@
         // Parse WhatsApp chat
         function parseWhatsAppChat(content) {
             const userMessages = {};
-            const pattern = /^(\d{2}\/\d{2}\/\d{2}), (\d{2}:\d{2}) - ([^:]+): (.+)$/;
-            
+            // Updated pattern to match various WhatsApp formats:
+            // DD/MM/YY, HH:MM - Sender: Message
+            // DD/MM/YYYY, HH:MM - Sender: Message
+            const pattern = /^(\d{1,2}\/\d{1,2}\/\d{2,4}),\s*(\d{1,2}:\d{2})\s*-\s*([^:]+):\s*(.+)$/;
+
             const lines = content.split('\n');
-            
+
             for (const line of lines) {
-                const match = line.match(pattern);
+                const match = line.trim().match(pattern);
                 if (match) {
                     const sender = match[3].trim();
                     const message = match[4].trim();
-                    
+
                     // Skip system messages
-                    if (message.includes('<Media omitted>') || 
+                    if (message.includes('<Media omitted>') ||
                         message.includes('created group') ||
                         message.includes('added') ||
                         message.includes('left')) {
                         continue;
                     }
-                    
+
                     if (!userMessages[sender]) {
                         userMessages[sender] = [];
                     }
                     userMessages[sender].push(message);
                 }
             }
-            
+
             return userMessages;
         }
 
@@ -604,7 +619,7 @@
         function classifyUser(messages) {
             const text = messages.join(' ').toLowerCase();
             const scores = {};
-            
+
             for (const [char, info] of Object.entries(CHARACTERS)) {
                 let score = 0;
                 for (const keyword of info.keywords) {
@@ -616,12 +631,12 @@
                 }
                 scores[char] = score;
             }
-            
+
             // Find best match
             let bestChar = 'ANNI';
             let maxScore = 0;
             let totalScore = 0;
-            
+
             for (const [char, score] of Object.entries(scores)) {
                 totalScore += score;
                 if (score > maxScore) {
@@ -629,10 +644,10 @@
                     bestChar = char;
                 }
             }
-            
+
             // Calculate confidence
             const confidence = totalScore > 0 ? (maxScore / totalScore) * 100 : 50;
-            
+
             return {
                 character: bestChar,
                 confidence: Math.min(Math.max(confidence, 30), 95),
@@ -645,9 +660,9 @@
             const resultsGrid = document.getElementById('resultsGrid');
             const statsDiv = document.getElementById('stats');
             const resultsSection = document.getElementById('results');
-            
+
             let predictions = [];
-            
+
             for (const [user, messages] of Object.entries(userMessages)) {
                 if (messages.length >= 3) {
                     const result = classifyUser(messages);
@@ -658,11 +673,11 @@
                     });
                 }
             }
-            
+
             // Render stats
             const uniqueChars = new Set(predictions.map(p => p.character)).size;
             const totalMessages = predictions.reduce((sum, p) => sum + p.messages.length, 0);
-            
+
             statsDiv.innerHTML = `
                 <div class="stat-box">
                     <div class="stat-number">${predictions.length}</div>
@@ -677,7 +692,7 @@
                     <div class="stat-label">Unique Characters</div>
                 </div>
             `;
-            
+
             // Render cards
             resultsGrid.innerHTML = predictions.map((p, index) => {
                 const charInfo = CHARACTERS[p.character];
@@ -699,7 +714,7 @@
                     </div>
                 `;
             }).join('');
-            
+
             resultsSection.classList.add('active');
         }
 
@@ -734,7 +749,7 @@
         function processFile(file) {
             loading.classList.add('active');
             document.getElementById('results').classList.remove('active');
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 setTimeout(() => {
@@ -750,7 +765,7 @@
         function useSampleChat() {
             loading.classList.add('active');
             document.getElementById('results').classList.remove('active');
-            
+
             setTimeout(() => {
                 const userMessages = parseWhatsAppChat(SAMPLE_CHAT);
                 loading.classList.remove('active');
@@ -759,4 +774,5 @@
         }
     </script>
 </body>
+
 </html>
