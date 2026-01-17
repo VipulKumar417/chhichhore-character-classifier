@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chhichhore Character Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, #0f3460, #16213e);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            border: 1px solid rgba(233, 69, 96, 0.3);
+        }
+
+        .header h1 {
+            color: #e94560;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: #a2d2ff;
+            font-size: 1.1rem;
+        }
+
+        /* Main content grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, rgba(31, 64, 104, 0.8), rgba(22, 36, 71, 0.9));
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(162, 210, 255, 0.1);
+            height: fit-content;
+        }
+
+        .sidebar h2 {
+            color: #e94560;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .character-item {
+            background: rgba(15, 52, 96, 0.5);
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid #e94560;
+        }
+
+        .character-item:hover {
+            background: rgba(233, 69, 96, 0.2);
+            transform: translateX(5px);
+        }
+
+        .character-item h4 {
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .character-item p {
+            color: #a2d2ff;
+            font-size: 0.8rem;
+        }
+
+        /* Main content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Upload area */
+        .upload-section {
+            background: linear-gradient(145deg, #1f4068, #162447);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(162, 210, 255, 0.1);
+        }
+
+        .upload-section h3 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #e94560;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(233, 69, 96, 0.05);
+        }
+
+        .upload-area:hover {
+            background: rgba(233, 69, 96, 0.15);
+            border-color: #ff6b6b;
+        }
+
+        .upload-area.dragover {
+            background: rgba(233, 69, 96, 0.2);
+            border-color: #ff6b6b;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: #a2d2ff;
+            margin-bottom: 10px;
+        }
+
+        .upload-area small {
+            color: #6b7a99;
+            font-size: 0.85rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #0f3460, #1f4068);
+            border: 1px solid #e94560;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-box {
+            background: linear-gradient(145deg, #0f3460, #16213e);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #e94560;
+        }
+
+        .stat-label {
+            color: #a2d2ff;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .results-header h2 {
+            color: #ffffff;
+            font-size: 1.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* Character Card */
+        .character-card {
+            background: linear-gradient(145deg, #1f4068, #162447);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border-left: 5px solid #e94560;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(233, 69, 96, 0.3);
+        }
+
+        .user-name {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .character-name {
+            color: #e94560;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .character-traits {
+            background: rgba(233, 69, 96, 0.15);
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .character-traits span {
+            color: #ffd6e0;
+            font-size: 0.9rem;
+        }
+
+        .character-desc {
+            color: #a2d2ff;
+            font-style: italic;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .confidence-section {
+            margin-top: 15px;
+            color: #a2d2ff;
+            font-size: 0.9rem;
+        }
+
+        .confidence-bar {
+            background: #0f3460;
+            border-radius: 10px;
+            height: 8px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(233, 69, 96, 0.3);
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* How it works */
+        .how-it-works {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(162, 210, 255, 0.2);
+        }
+
+        .how-it-works h3 {
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .how-it-works ol {
+            color: #a2d2ff;
+            font-size: 0.85rem;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #6b7a99;
+            font-size: 0.9rem;
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: #e94560;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎬 Chhichhore Character Classifier</h1>
+            <p>Upload your WhatsApp group chat to discover which Chhichhore character each participant resembles!</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2>🎬 Character Guide</h2>
+                
+                <div class="character-item">
+                    <h4>🎭 ANNI - Aniruddh</h4>
+                    <p>Leader, Responsible, Caring</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 SEXA - Sexa</h4>
+                    <p>Humorous, Witty, Playful</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 DEREK - Derek</h4>
+                    <p>Cool, Rebellious, Confident</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 MUMMY - Mummy</h4>
+                    <p>Caring, Supportive, Sensitive</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 ACID - Acid</h4>
+                    <p>Intense, Passionate, Direct</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 BEVDA - Bevda</h4>
+                    <p>Laid-back, Casual, Easy-going</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 RAGGIE - Raggie</h4>
+                    <p>Competitive, Challenging</p>
+                </div>
+                <div class="character-item">
+                    <h4>🎭 MAYA - Maya</h4>
+                    <p>Caring, Emotional, Loving</p>
+                </div>
+
+                <div class="how-it-works">
+                    <h3>📋 How it works</h3>
+                    <ol>
+                        <li>Export your WhatsApp chat</li>
+                        <li>Upload the .txt file</li>
+                        <li>AI analyzes each participant</li>
+                        <li>Get character predictions!</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Upload Section -->
+                <div class="upload-section">
+                    <h3>📤 Upload WhatsApp Chat</h3>
+                    <div class="upload-area" id="dropZone">
+                        <div class="upload-icon">📁</div>
+                        <p>Drop your WhatsApp chat export here</p>
+                        <small>or click to browse (.txt format)</small>
+                        <input type="file" id="fileInput" accept=".txt">
+                    </div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="btn btn-secondary" onclick="useSampleChat()">
+                            📂 Try Demo Chat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color: #a2d2ff;">Analyzing messages...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section" id="results">
+                    <div class="results-header">
+                        <h2>🎭 Character Predictions</h2>
+                    </div>
+
+                    <div class="stats-grid" id="stats">
+                        <!-- Stats will be inserted here -->
+                    </div>
+
+                    <div class="results-grid" id="resultsGrid" style="margin-top: 25px;">
+                        <!-- Results will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built for Hackathon 🚀 | <a href="https://github.com/VipulKumar417/chhichhore-character-classifier" target="_blank">View on GitHub</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Character definitions
+        const CHARACTERS = {
+            'ANNI': {
+                fullName: 'Aniruddh (Anni)',
+                traits: ['Leader', 'Responsible', 'Caring', 'Thoughtful'],
+                description: 'The protagonist - responsible leader who cares deeply for friends and family.',
+                keywords: ['responsibility', 'care', 'lead', 'help', 'support', 'serious', 'think', 'plan', 'manage', 'together', 'team', 'everyone', 'worried', 'concerned']
+            },
+            'SEXA': {
+                fullName: 'Sexa',
+                traits: ['Humorous', 'Witty', 'Playful', 'Fun-loving'],
+                description: 'The joker of the group - always cracking jokes and having fun.',
+                keywords: ['haha', 'lol', 'funny', 'joke', 'maza', 'fun', 'party', 'lmao', 'rofl', '😂', '🤣', 'comedy', 'pagal', 'bakwas', 'chill', 'enjoy']
+            },
+            'DEREK': {
+                fullName: 'Derek',
+                traits: ['Cool', 'Rebellious', 'Confident', 'Bold'],
+                description: 'The cool rebel - confident and does things his own way.',
+                keywords: ['cool', 'style', 'rebel', 'boss', 'dare', 'challenge', 'fight', 'strong', 'power', 'attitude', 'swag', 'rules', 'break', 'bold']
+            },
+            'MUMMY': {
+                fullName: 'Mummy',
+                traits: ['Caring', 'Supportive', 'Sensitive', 'Emotional'],
+                description: 'The caring friend - always there to support and comfort others.',
+                keywords: ['care', 'love', 'feel', 'sad', 'happy', 'miss', 'hug', 'emotional', 'cry', 'sweet', 'dear', 'precious', 'worried', '❤️', '🥺', 'aww']
+            },
+            'ACID': {
+                fullName: 'Acid',
+                traits: ['Intense', 'Passionate', 'Direct', 'Honest'],
+                description: 'The intense one - passionate about everything and speaks his mind.',
+                keywords: ['intense', 'passion', 'serious', 'real', 'truth', 'honest', 'direct', 'angry', 'frustrated', 'important', 'matter', 'focus', 'dedicated']
+            },
+            'BEVDA': {
+                fullName: 'Bevda',
+                traits: ['Laid-back', 'Casual', 'Easy-going', 'Friendly'],
+                description: 'The chill guy - relaxed and easy-going personality.',
+                keywords: ['chill', 'relax', 'easy', 'cool', 'whatever', 'fine', 'okay', 'no problem', 'tension', 'calm', 'peace', 'bro', 'dude', 'aaram']
+            },
+            'RAGGIE': {
+                fullName: 'Raggie',
+                traits: ['Competitive', 'Challenging', 'Rival', 'Determined'],
+                description: 'The rival - competitive and always up for a challenge.',
+                keywords: ['win', 'beat', 'compete', 'challenge', 'best', 'first', 'game', 'match', 'score', 'goal', 'target', 'achieve', 'fight', 'race']
+            },
+            'MAYA': {
+                fullName: 'Maya',
+                traits: ['Caring', 'Emotional', 'Supportive', 'Loving'],
+                description: 'The caring presence - emotional and deeply supportive.',
+                keywords: ['love', 'care', 'support', 'together', 'always', 'forever', 'sweet', 'kind', 'beautiful', 'special', 'heart', '💕', '💗', 'precious']
+            }
+        };
+
+        // Sample demo chat data
+        const SAMPLE_CHAT = `01/01/24, 10:00 - Rahul: Bhai kya plan hai aaj? Party karein?
+01/01/24, 10:02 - Priya: Haan chalte hain! Bahut din ho gaye 😊
+01/01/24, 10:05 - Amit: Lol yaar tum log hamesha party party 😂😂
+01/01/24, 10:07 - Sneha: Guys pehle padhai kar lo exam aa rahe hain 📚
+01/01/24, 10:10 - Rahul: Chill yaar tension mat le, sab ho jayega
+01/01/24, 10:12 - Vikram: Main toh ready hoon! Challenge accepted 💪
+01/01/24, 10:15 - Priya: Aww you all are so sweet ❤️ Miss you guys
+01/01/24, 10:18 - Amit: Hahahaha itna emotional mat ho yaar 🤣
+01/01/24, 10:20 - Sneha: Team ke liye kuch plan karte hain together
+01/01/24, 10:22 - Rahul: Whatever yaar chill maaro, sab set hai
+01/01/24, 10:25 - Vikram: Competition jeetna hai, focus karo
+01/01/24, 10:28 - Priya: Love you all 💕 Best friends forever
+01/01/24, 10:30 - Amit: Bhai ye kya bakwas chal rahi hai 😂😂😂
+01/01/24, 10:32 - Sneha: Main sab ka dhyan rakhungi, don't worry
+01/01/24, 10:35 - Rahul: Tension nahi lene ka bro, aaram se
+01/01/24, 10:38 - Vikram: First position hamari! Beat everyone!
+01/01/24, 10:40 - Priya: So caring you all are 🥺❤️
+01/01/24, 10:42 - Amit: Pagal ho gaye ho kya sab 🤣🤣
+01/01/24, 10:45 - Sneha: Responsibility leni padegi humein sabko
+01/01/24, 10:48 - Rahul: Cool cool, whatever works`;
+
+        // Parse WhatsApp chat
+        function parseWhatsAppChat(content) {
+            const userMessages = {};
+            const pattern = /^(\d{2}\/\d{2}\/\d{2}), (\d{2}:\d{2}) - ([^:]+): (.+)$/;
+            
+            const lines = content.split('\n');
+            
+            for (const line of lines) {
+                const match = line.match(pattern);
+                if (match) {
+                    const sender = match[3].trim();
+                    const message = match[4].trim();
+                    
+                    // Skip system messages
+                    if (message.includes('<Media omitted>') || 
+                        message.includes('created group') ||
+                        message.includes('added') ||
+                        message.includes('left')) {
+                        continue;
+                    }
+                    
+                    if (!userMessages[sender]) {
+                        userMessages[sender] = [];
+                    }
+                    userMessages[sender].push(message);
+                }
+            }
+            
+            return userMessages;
+        }
+
+        // Classify user based on keywords
+        function classifyUser(messages) {
+            const text = messages.join(' ').toLowerCase();
+            const scores = {};
+            
+            for (const [char, info] of Object.entries(CHARACTERS)) {
+                let score = 0;
+                for (const keyword of info.keywords) {
+                    const regex = new RegExp(keyword.toLowerCase(), 'gi');
+                    const matches = text.match(regex);
+                    if (matches) {
+                        score += matches.length;
+                    }
+                }
+                scores[char] = score;
+            }
+            
+            // Find best match
+            let bestChar = 'ANNI';
+            let maxScore = 0;
+            let totalScore = 0;
+            
+            for (const [char, score] of Object.entries(scores)) {
+                totalScore += score;
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestChar = char;
+                }
+            }
+            
+            // Calculate confidence
+            const confidence = totalScore > 0 ? (maxScore / totalScore) * 100 : 50;
+            
+            return {
+                character: bestChar,
+                confidence: Math.min(Math.max(confidence, 30), 95),
+                scores: scores
+            };
+        }
+
+        // Render results
+        function renderResults(userMessages) {
+            const resultsGrid = document.getElementById('resultsGrid');
+            const statsDiv = document.getElementById('stats');
+            const resultsSection = document.getElementById('results');
+            
+            let predictions = [];
+            
+            for (const [user, messages] of Object.entries(userMessages)) {
+                if (messages.length >= 3) {
+                    const result = classifyUser(messages);
+                    predictions.push({
+                        user: user,
+                        messages: messages,
+                        ...result
+                    });
+                }
+            }
+            
+            // Render stats
+            const uniqueChars = new Set(predictions.map(p => p.character)).size;
+            const totalMessages = predictions.reduce((sum, p) => sum + p.messages.length, 0);
+            
+            statsDiv.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-number">${predictions.length}</div>
+                    <div class="stat-label">Participants Analyzed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">${totalMessages}</div>
+                    <div class="stat-label">Messages Analyzed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">${uniqueChars}</div>
+                    <div class="stat-label">Unique Characters</div>
+                </div>
+            `;
+            
+            // Render cards
+            resultsGrid.innerHTML = predictions.map((p, index) => {
+                const charInfo = CHARACTERS[p.character];
+                return `
+                    <div class="character-card" style="animation-delay: ${index * 0.1}s">
+                        <div class="user-name">👤 ${p.user}</div>
+                        <div class="character-name">🎭 ${p.character} - ${charInfo.fullName}</div>
+                        <div class="character-traits">
+                            <strong>Traits:</strong> <span>${charInfo.traits.join(', ')}</span>
+                        </div>
+                        <div class="character-desc">${charInfo.description}</div>
+                        <div class="confidence-section">
+                            <strong>Confidence:</strong> ${p.confidence.toFixed(1)}% | 
+                            <strong>Messages:</strong> ${p.messages.length}
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${p.confidence}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            resultsSection.classList.add('active');
+        }
+
+        // File handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const loading = document.getElementById('loading');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        function processFile(file) {
+            loading.classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setTimeout(() => {
+                    const content = e.target.result;
+                    const userMessages = parseWhatsAppChat(content);
+                    loading.classList.remove('active');
+                    renderResults(userMessages);
+                }, 1000);
+            };
+            reader.readAsText(file);
+        }
+
+        function useSampleChat() {
+            loading.classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            
+            setTimeout(() => {
+                const userMessages = parseWhatsAppChat(SAMPLE_CHAT);
+                loading.classList.remove('active');
+                renderResults(userMessages);
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
