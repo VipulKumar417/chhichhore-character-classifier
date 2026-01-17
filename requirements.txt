@@ -1,0 +1,16 @@
+# Movie Character Classification - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core ML & Data
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+
+# NLP
+nltk>=3.6.0
+
+# Web Application
+streamlit>=1.20.0
+
+# Optional but recommended
+# spacy>=3.0.0  # Advanced NLP (optional)
