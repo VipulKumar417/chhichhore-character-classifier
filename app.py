@@ -167,46 +167,135 @@ st.markdown("""
 
 
 # Initialize session state
-if 'classifier' not in st.session_state:
+# Session State & Version Control
+if 'classifier' not in st.session_state or st.session_state.get('classifier_version') != '2.2':
     st.session_state.classifier = None
+    st.session_state.predictions = None
+    st.session_state.classifier_version = '2.2'
 if 'predictions' not in st.session_state:
     st.session_state.predictions = None
 
 
+class HybridClassifier:
+    """Wrapper that combines predictions from multiple models (Legacy + Archetype + Semantic)."""
+    def __init__(self, legacy_clf, archetype_clf, semantic_clf):
+        self.legacy = legacy_clf
+        self.archetype = archetype_clf
+        self.semantic = semantic_clf
+        self.use_archetypes = True
+        
+    def predict_archetype(self, text: str) -> dict:
+        legacy_res = self.legacy.predict_archetype(text) if self.legacy else None
+        archetype_res = self.archetype.predict_archetype(text) if self.archetype else None
+        semantic_res = self.semantic.predict(text) if self.semantic else None
+        
+        # Collect confidences
+        legacy_conf = legacy_res.get('confidence', 0) if legacy_res else 0
+        arch_conf = archetype_res.get('confidence', 0) if archetype_res else 0
+        
+        # Semantic confidence comes from best similarity score matches
+        # The probability in semantic_res is already weighted, but raw score is critical
+        # Let's say we trust Semantic score * 2.0
+        semantic_conf = 0.0
+        if semantic_res:
+            # Check the raw similarity of best match which is hidden in probabilities? 
+            # Ideally semantic_res['probabilities'] sums to 1.
+            # But we want the RAW match strength. 
+            # semantic_res['confidence'] from our implementation is the probability.
+            # Let's assume probability is a good proxy for now.
+            semantic_conf = semantic_res.get('confidence', 0)
+        
+        # Priority Logic:
+        # 1. Legacy (Script Keywords): 3.0x Boost (Strongest hook)
+        # 2. Semantic (Script Meaning): 2.0x Boost (Strong sense match)
+        # 3. Archetype (General Persona): 1.0x (Baseline)
+        
+        scores = [
+            (legacy_conf * 3.0, 'legacy'),
+            (semantic_conf * 2.0, 'semantic'),
+            (arch_conf * 1.0, 'archetype')
+        ]
+        
+        winner_score, winner_model = max(scores, key=lambda x: x[0])
+        
+        if winner_model == 'legacy' and legacy_res:
+            return legacy_res
+        elif winner_model == 'semantic' and semantic_res:
+            # Semantic result format needs to be adapted to expected format
+            char = semantic_res['character']
+            return {
+                'chhichhore_character': char,
+                'chhichhore_info': CHARACTERS.get(char, {}),
+                'confidence': semantic_res['confidence'],
+                'all_probabilities': semantic_res['probabilities'],
+                'archetype': f"Semantic Match ({semantic_res.get('matches', [''])[0][:30]}...)" # Show match snippet?
+            }
+        elif archetype_res:
+            return archetype_res
+            
+        return legacy_res or archetype_res # Fallback
+
+    def predict(self, text):
+        res = self.predict_archetype(text)
+        return res.get('chhichhore_character'), {}
+
+
 def load_classifier():
-    """Load or train the classifier. Prefer archetype model if available."""
+    """Load all classifiers (Legacy, Semantic, Archetype) and return Hybrid wrapper."""
     base_dir = os.path.dirname(__file__)
-    archetype_model_path = os.path.join(base_dir, "archetype_model.pkl")
+    
+    # Model Paths
     legacy_model_path = os.path.join(base_dir, "character_model.pkl")
+    semantic_model_path = os.path.join(base_dir, "semantic_model.pkl")
+    lmsys_model_path = os.path.join(base_dir, "lmsys_archetype_model.pkl")
+    start_archetype_path = os.path.join(base_dir, "archetype_model.pkl")
     script_path = os.path.join(base_dir, "Chhichhore-script.txt")
     
-    # Try loading archetype model first (trained on 1000+ movies)
-    if os.path.exists(archetype_model_path):
-        try:
-            classifier = CharacterClassifier(use_archetypes=True)
-            classifier.load(archetype_model_path)
-            st.session_state.model_type = 'archetype'
-            return classifier
-        except Exception as e:
-            pass
+    classifiers = {}
     
-    # Fallback to legacy model
+    # 1. Load Original Character Model
     if os.path.exists(legacy_model_path):
         try:
-            classifier = CharacterClassifier()
-            classifier.load(legacy_model_path)
-            st.session_state.model_type = 'legacy'
-            return classifier
-        except:
-            pass
+            c = CharacterClassifier()
+            c.load(legacy_model_path)
+            classifiers['legacy'] = c
+        except: pass
+            
+    # 2. Load Semantic Model (New!)
+    if os.path.exists(semantic_model_path):
+        try:
+            # Need to import locally to avoid circular dep issues at top logic?
+            from semantic_model import SemanticCharacterClassifier
+            c = SemanticCharacterClassifier()
+            c.load(semantic_model_path)
+            classifiers['semantic'] = c
+        except: pass
+
+    # 3. Load Archetype Model
+    if os.path.exists(lmsys_model_path):
+        try:
+            c = CharacterClassifier(use_archetypes=True)
+            c.load(lmsys_model_path)
+            classifiers['archetype'] = c
+        except: pass
+    elif os.path.exists(start_archetype_path):
+        try:
+            c = CharacterClassifier(use_archetypes=True)
+            c.load(start_archetype_path)
+            classifiers['archetype'] = c
+        except: pass
+
+    # If legacy matched nothing, train it info
+    if 'legacy' not in classifiers and os.path.exists(script_path):
+        c = train_from_script(script_path, legacy_model_path)
+        classifiers['legacy'] = c
     
-    # Train from script if no model exists
-    if os.path.exists(script_path):
-        classifier = train_from_script(script_path, legacy_model_path)
-        st.session_state.model_type = 'legacy'
-        return classifier
-    
-    return None
+    st.session_state.model_type = 'hybrid_semantic'
+    return HybridClassifier(
+        classifiers.get('legacy'), 
+        classifiers.get('archetype'),
+        classifiers.get('semantic')
+    )
 
 
 def render_header():

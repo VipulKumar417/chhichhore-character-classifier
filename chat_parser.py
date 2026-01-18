@@ -23,18 +23,18 @@ def parse_whatsapp_chat(file_path: str, debug: bool = False) -> Dict[str, str]:
     
     # Supports multiple WhatsApp export formats:
     # 1) DD/MM/YY, HH:MM - Sender: Message
-    # 2) DD/MM/YYYY, HH:MM am/pm - Sender: Message
-    # 3) [DD/MM/YY, HH:MM:SS] Sender: Message (iOS format)
-    # 4) M/D/YY, HH:MM - Sender: Message (US format)
+    # 2) DD-MM-YYYY, HH:MM am/pm - Sender: Message
+    # 3) [DD.MM.YY, HH:MM:SS] Sender: Message
+    # 4) YYYY-MM-DD HH:MM - Sender: Message
     pattern = (
-        r'^'                                   # start of line
-        r'(?:\[)?'                             # optional opening bracket (iOS)
-        r'(?:(\d{1,2}/\d{1,2}/\d{2,4}),?\s+)?'  # optional date: D/M/YY or DD/MM/YYYY + comma
-        r'(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[aApP][mM])?)\s*'  # time: HH:MM or HH:MM:SS, with optional am/pm
-        r'(?:\])?\s*'                          # optional closing bracket (iOS)
-        r'-\s*'                                # dash with optional spaces
-        r'([^:]+):\s*'                         # sender (anything up to colon)
-        r'(.+)$'                               # message
+        r'^'                                     # start of line
+        r'(?:\[)?'                               # optional opening bracket (iOS)
+        r'(?:(\d{1,4}[-/\.]\d{1,2}[-/\.]\d{2,4}),?\s+)?'  # date: flexible separators (-, /, .) and year length
+        r'(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[aApP][mM])?)'   # time: HH:MM[:SS] [AM/PM]
+        r'(?:\])?'                               # optional closing bracket (iOS)
+        r'[\s-]*'                                # separator (dash or space) between time and sender
+        r'([^:]+):\s*'                           # sender
+        r'(.+)$'                                 # message
     )
     
     # Read file with various encodings
