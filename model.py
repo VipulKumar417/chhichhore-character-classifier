@@ -214,7 +214,7 @@ class CharacterClassifier:
     
     def train_from_datasets(self, include_github: bool = True, 
                            max_samples_per_archetype: int = 5000,
-                           test_size: float = 0.2) -> Dict:
+                           test_size: float = 0.4) -> Dict:
         """
         Train the classifier using movie script datasets.
         Labels characters by their archetype.
