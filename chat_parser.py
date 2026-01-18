@@ -20,9 +20,17 @@ def parse_whatsapp_chat(file_path: str) -> Dict[str, str]:
     """
     user_messages = defaultdict(list)
     
-    # WhatsApp message pattern: DD/MM/YY, HH:MM - Sender: Message
-    pattern = r'^\d{2}/\d{2}/\d{2}, \d{2}:\d{2} - ([^:]+): (.+)$'
-    
+    # Supports:
+    # 1) DD/MM/YY, HH:MM - Sender: Message
+    # 2) DD/MM/YYYY, HH:MM am/pm - Sender: Message
+    # 3) HH:MM - Sender: Message
+    pattern = (
+        r'^'                                   # start of line
+        r'(?:(\d{2}/\d{2}/\d{2,4}),\s+)?'      # optional date: DD/MM/YY or DD/MM/YYYY + comma
+        r'(\d{1,2}:\d{2}(?:\s*[ap]m)?)\s*-\s*' # time: HH:MM, with optional am/pm
+        r'([^:]+):\s*'                         # sender (anything up to colon)
+        r'(.+)$'                               # message
+    )
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     
