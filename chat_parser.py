@@ -8,12 +8,13 @@ from typing import Dict, List, Tuple
 from collections import defaultdict
 
 
-def parse_whatsapp_chat(file_path: str) -> Dict[str, str]:
+def parse_whatsapp_chat(file_path: str, debug: bool = False) -> Dict[str, str]:
     """
     Parse a WhatsApp chat export file and aggregate messages per user.
     
     Args:
         file_path: Path to the WhatsApp chat .txt file
+        debug: If True, print debug information
         
     Returns:
         Dictionary mapping user names to their combined messages
@@ -31,13 +32,28 @@ def parse_whatsapp_chat(file_path: str) -> Dict[str, str]:
         r'(?:(\d{1,2}/\d{1,2}/\d{2,4}),?\s+)?'  # optional date: D/M/YY or DD/MM/YYYY + comma
         r'(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[aApP][mM])?)\s*'  # time: HH:MM or HH:MM:SS, with optional am/pm
         r'(?:\])?\s*'                          # optional closing bracket (iOS)
-        r'-?\s*'                               # optional dash
+        r'-\s*'                                # dash with optional spaces
         r'([^:]+):\s*'                         # sender (anything up to colon)
         r'(.+)$'                               # message
     )
     
-    with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    # Read file with various encodings
+    lines = []
+    for encoding in ['utf-8-sig', 'utf-8', 'utf-16', 'latin-1']:
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                lines = f.readlines()
+            if lines:
+                if debug:
+                    print(f"  Read file with {encoding} encoding, {len(lines)} lines")
+                break
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    
+    if not lines:
+        if debug:
+            print("  Error: Could not read file with any encoding")
+        return {}
     
     current_user = None
     current_message = None
