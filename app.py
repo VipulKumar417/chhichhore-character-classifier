@@ -223,27 +223,19 @@ def render_character_card(user_name: str, prediction_data: dict, message_count: 
     """Render a character prediction card with archetype info."""
     character = prediction_data.get('chhichhore_character', prediction_data.get('character', 'ANNI'))
     confidence = prediction_data.get('confidence', 0) * 100
-    archetype = prediction_data.get('archetype', None)
-    archetype_desc = prediction_data.get('archetype_description', '')
+    archetype = prediction_data.get('archetype', '')
     
     char_info = CHARACTERS.get(character, {})
     traits_html = ", ".join(char_info.get('traits', []))
     
-    # Build archetype section if available
-    archetype_section = ""
-    if archetype:
-        archetype_section = f'''
-        <div style="background: rgba(162,210,255,0.2); padding: 10px 15px; border-radius: 10px; margin: 10px 0;">
-            <strong style="color: #a2d2ff;">🎭 Archetype:</strong> <span style="color: #fff;">{archetype}</span><br/>
-            <span style="color: #a2d2ff; font-size: 0.9em;">{archetype_desc[:100]}...</span>
-        </div>
-        '''
+    # Show archetype if available, otherwise show character
+    archetype_line = f"🎭 Archetype: {archetype}" if archetype else ""
     
     st.markdown(f"""
     <div class="character-card">
         <div class="user-name">👤 {user_name}</div>
         <div class="character-name">🎬 {character} - {char_info.get('full_name', character)}</div>
-        {archetype_section}
+        <div style="color: #a2d2ff; padding: 5px 0; font-size: 0.95em;">{archetype_line}</div>
         <div class="character-traits">
             <strong>Traits:</strong> {traits_html}
         </div>
@@ -303,7 +295,7 @@ def main():
         st.error("❌ Could not load the classifier. Please ensure Chhichhore-script.txt is in the same directory.")
         return
     
-    st.success(f\"✅ AI Model loaded successfully! ({st.session_state.get('model_type', 'legacy').title()} Model)\")
+    st.success(f"✅ AI Model loaded successfully! ({st.session_state.get('model_type', 'legacy').title()} Model)")
     
     # File upload section
     st.markdown("### 📤 Upload WhatsApp Chat")
@@ -396,7 +388,7 @@ def main():
             """, unsafe_allow_html=True)
         
         with col3:
-            unique_chars = len(set(p['character'] for p in st.session_state.predictions.values()))
+            unique_chars = len(set(p.get('chhichhore_character', p.get('character', 'ANNI')) for p in st.session_state.predictions.values()))
             st.markdown(f"""
             <div class="stats-box">
                 <div class="stats-number">{unique_chars}</div>
