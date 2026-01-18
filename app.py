@@ -14,6 +14,13 @@ from chat_parser import parse_whatsapp_chat, get_user_stats
 from script_parser import CHARACTERS, get_character_info
 from model import CharacterClassifier, train_from_script
 
+# Import archetype info if available
+try:
+    from archetypes import ARCHETYPES, get_chhichhore_mapping
+    ARCHETYPES_AVAILABLE = True
+except ImportError:
+    ARCHETYPES_AVAILABLE = False
+
 # Page configuration
 st.set_page_config(
     page_title="Chhichhore Character Classifier",
@@ -167,20 +174,36 @@ if 'predictions' not in st.session_state:
 
 
 def load_classifier():
-    """Load or train the classifier."""
-    script_path = os.path.join(os.path.dirname(__file__), "Chhichhore-script.txt")
-    model_path = os.path.join(os.path.dirname(__file__), "character_model.pkl")
+    """Load or train the classifier. Prefer archetype model if available."""
+    base_dir = os.path.dirname(__file__)
+    archetype_model_path = os.path.join(base_dir, "archetype_model.pkl")
+    legacy_model_path = os.path.join(base_dir, "character_model.pkl")
+    script_path = os.path.join(base_dir, "Chhichhore-script.txt")
     
-    if os.path.exists(model_path):
+    # Try loading archetype model first (trained on 1000+ movies)
+    if os.path.exists(archetype_model_path):
+        try:
+            classifier = CharacterClassifier(use_archetypes=True)
+            classifier.load(archetype_model_path)
+            st.session_state.model_type = 'archetype'
+            return classifier
+        except Exception as e:
+            pass
+    
+    # Fallback to legacy model
+    if os.path.exists(legacy_model_path):
         try:
             classifier = CharacterClassifier()
-            classifier.load(model_path)
+            classifier.load(legacy_model_path)
+            st.session_state.model_type = 'legacy'
             return classifier
         except:
             pass
     
+    # Train from script if no model exists
     if os.path.exists(script_path):
-        classifier = train_from_script(script_path, model_path)
+        classifier = train_from_script(script_path, legacy_model_path)
+        st.session_state.model_type = 'legacy'
         return classifier
     
     return None
@@ -196,17 +219,31 @@ def render_header():
     """, unsafe_allow_html=True)
 
 
-def render_character_card(user_name: str, character: str, probabilities: dict, message_count: int):
-    """Render a character prediction card."""
-    char_info = CHARACTERS.get(character, {})
-    confidence = probabilities.get(character, 0) * 100
+def render_character_card(user_name: str, prediction_data: dict, message_count: int):
+    """Render a character prediction card with archetype info."""
+    character = prediction_data.get('chhichhore_character', prediction_data.get('character', 'ANNI'))
+    confidence = prediction_data.get('confidence', 0) * 100
+    archetype = prediction_data.get('archetype', None)
+    archetype_desc = prediction_data.get('archetype_description', '')
     
+    char_info = CHARACTERS.get(character, {})
     traits_html = ", ".join(char_info.get('traits', []))
+    
+    # Build archetype section if available
+    archetype_section = ""
+    if archetype:
+        archetype_section = f'''
+        <div style="background: rgba(162,210,255,0.2); padding: 10px 15px; border-radius: 10px; margin: 10px 0;">
+            <strong style="color: #a2d2ff;">🎭 Archetype:</strong> <span style="color: #fff;">{archetype}</span><br/>
+            <span style="color: #a2d2ff; font-size: 0.9em;">{archetype_desc[:100]}...</span>
+        </div>
+        '''
     
     st.markdown(f"""
     <div class="character-card">
         <div class="user-name">👤 {user_name}</div>
-        <div class="character-name">🎭 {character} - {char_info.get('full_name', character)}</div>
+        <div class="character-name">🎬 {character} - {char_info.get('full_name', character)}</div>
+        {archetype_section}
         <div class="character-traits">
             <strong>Traits:</strong> {traits_html}
         </div>
@@ -266,7 +303,7 @@ def main():
         st.error("❌ Could not load the classifier. Please ensure Chhichhore-script.txt is in the same directory.")
         return
     
-    st.success("✅ AI Model loaded successfully!")
+    st.success(f\"✅ AI Model loaded successfully! ({st.session_state.get('model_type', 'legacy').title()} Model)\")
     
     # File upload section
     st.markdown("### 📤 Upload WhatsApp Chat")
@@ -312,12 +349,20 @@ def main():
                 predictions = {}
                 for user, messages in user_messages.items():
                     if len(messages) > 20:  # Only classify users with enough messages
-                        pred, probs = st.session_state.classifier.predict(messages)
-                        predictions[user] = {
-                            'character': pred,
-                            'probabilities': probs,
-                            'message_count': user_stats[user]['total_words']
-                        }
+                        # Use archetype prediction if available, else legacy
+                        if hasattr(st.session_state.classifier, 'predict_archetype') and st.session_state.classifier.use_archetypes:
+                            result = st.session_state.classifier.predict_archetype(messages)
+                            result['message_count'] = user_stats[user]['total_words']
+                            predictions[user] = result
+                        else:
+                            pred, probs = st.session_state.classifier.predict(messages)
+                            predictions[user] = {
+                                'character': pred,
+                                'chhichhore_character': pred,
+                                'confidence': probs.get(pred, 0),
+                                'probabilities': probs,
+                                'message_count': user_stats[user]['total_words']
+                            }
                 
                 st.session_state.predictions = predictions
                 
@@ -373,8 +418,7 @@ def main():
                     with col:
                         render_character_card(
                             user,
-                            data['character'],
-                            data['probabilities'],
+                            data,
                             data['message_count']
                         )
         
@@ -384,7 +428,7 @@ def main():
         
         char_counts = {}
         for p in st.session_state.predictions.values():
-            char = p['character']
+            char = p.get('chhichhore_character', p.get('character', 'ANNI'))
             char_counts[char] = char_counts.get(char, 0) + 1
         
         import pandas as pd
