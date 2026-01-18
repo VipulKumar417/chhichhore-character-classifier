@@ -20,17 +20,22 @@ def parse_whatsapp_chat(file_path: str) -> Dict[str, str]:
     """
     user_messages = defaultdict(list)
     
-    # Supports:
+    # Supports multiple WhatsApp export formats:
     # 1) DD/MM/YY, HH:MM - Sender: Message
     # 2) DD/MM/YYYY, HH:MM am/pm - Sender: Message
-    # 3) HH:MM - Sender: Message
+    # 3) [DD/MM/YY, HH:MM:SS] Sender: Message (iOS format)
+    # 4) M/D/YY, HH:MM - Sender: Message (US format)
     pattern = (
         r'^'                                   # start of line
-        r'(?:(\d{2}/\d{2}/\d{2,4}),\s+)?'      # optional date: DD/MM/YY or DD/MM/YYYY + comma
-        r'(\d{1,2}:\d{2}(?:\s*[ap]m)?)\s*-\s*' # time: HH:MM, with optional am/pm
+        r'(?:\[)?'                             # optional opening bracket (iOS)
+        r'(?:(\d{1,2}/\d{1,2}/\d{2,4}),?\s+)?'  # optional date: D/M/YY or DD/MM/YYYY + comma
+        r'(\d{1,2}:\d{2}(?::\d{2})?(?:\s*[aApP][mM])?)\s*'  # time: HH:MM or HH:MM:SS, with optional am/pm
+        r'(?:\])?\s*'                          # optional closing bracket (iOS)
+        r'-?\s*'                               # optional dash
         r'([^:]+):\s*'                         # sender (anything up to colon)
         r'(.+)$'                               # message
     )
+    
     with open(file_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     
@@ -49,8 +54,9 @@ def parse_whatsapp_chat(file_path: str) -> Dict[str, str]:
             if current_user and current_message:
                 user_messages[current_user].append(current_message)
             
-            sender = match.group(1).strip()
-            message = match.group(2).strip()
+            # Groups: 1=date, 2=time, 3=sender, 4=message
+            sender = match.group(3).strip()
+            message = match.group(4).strip()
             
             # Skip system messages
             if _is_system_message(sender, message):
@@ -95,6 +101,13 @@ def _is_system_message(sender: str, message: str) -> bool:
         'Messages and calls are end-to-end encrypted',
         'POLL:',
         'OPTION:',
+        'joined using a group link',
+        'was added',
+        'security code changed',
+        'changed the group description',
+        'changed the group icon',
+        'pinned a message',
+        'deleted this message',
     ]
     
     full_text = f"{sender}: {message}"
