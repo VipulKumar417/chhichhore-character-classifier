@@ -332,7 +332,7 @@ def render_character_card(user_name: str, prediction_data: dict, message_count: 
             {char_info.get('description', 'No description available.')}
         </div>
         <div style="margin-top: 15px; color: #a2d2ff;">
-            <strong>Confidence:</strong> {confidence:.1f}% | <strong>Messages analyzed:</strong> {message_count}
+            <strong>% Match:</strong> {confidence:.1f}% | <strong>Messages analyzed:</strong> {message_count}
         </div>
         <div class="confidence-bar">
             <div class="confidence-fill" style="width: {confidence}%"></div>
