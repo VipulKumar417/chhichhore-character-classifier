@@ -17,7 +17,9 @@ ARCHETYPES = {
         'keywords': [
             'lead', 'team', 'together', 'plan', 'strategy', 'everyone', 'fight',
             'win', 'never give up', 'responsibility', 'captain', 'chief', 'boss',
-            'follow me', 'trust', 'believe', 'we can', 'mission', 'goal', 'unite'
+            'follow', 'trust', 'believe', 'mission', 'goal', 'unite', 'group',
+            'organize', 'manage', 'decide', 'meeting', 'project', 'deadline',
+            'sab log', 'chalo', 'karenge', 'hostel', 'competition'
         ],
         'dialogue_patterns': [
             r'we (can|will|must|should)',
@@ -25,7 +27,8 @@ ARCHETYPES = {
             r'trust (me|us)',
             r"let's (go|do|fight|win)",
             r'everyone',
-            r'together'
+            r'together',
+            r'sab (log|ko|milke)'
         ]
     },
     
@@ -37,16 +40,19 @@ ARCHETYPES = {
         'keywords': [
             'love', 'heart', 'girl', 'beautiful', 'date', 'marry', 'forever',
             'kiss', 'relationship', 'feelings', 'romance', 'crush', 'attraction',
-            'girlfriend', 'boyfriend', 'darling', 'sweetheart', 'dream', 'soulmate',
-            'ladki', 'patana', 'propose', 'pyaar'
+            'girlfriend', 'boyfriend', 'darling', 'sweetheart', 'soulmate',
+            'ladki', 'patana', 'propose', 'pyaar', 'dil', 'ishq', 'mohabbat',
+            'hot', 'cute', 'pretty', 'handsome', 'sexy', 'flirt', 'impress',
+            'number', 'insta', 'dm', 'slide', 'approach', 'bandi', 'gf', 'bf'
         ],
         'dialogue_patterns': [
             r'i love',
             r'beautiful',
-            r'my (heart|love)',
+            r'my (heart|love|crush)',
             r'in love',
             r'marry',
-            r'(girl|lady|woman)'
+            r'(girl|lady|woman|ladki|bandi)',
+            r'(hot|cute|pretty)'
         ]
     },
     
@@ -56,16 +62,20 @@ ARCHETYPES = {
         'traits': ['Cool', 'Rebellious', 'Confident', 'Bold', 'Independent'],
         'chhichhore_mapping': 'DEREK',
         'keywords': [
-            'rules', 'break', 'rebel', 'different', 'my way', 'damn', 'hell',
-            'care', 'whatever', 'cool', 'awesome', 'badass', 'attitude', 'style',
-            'swagger', 'chill', 'relax', 'easy', 'problem', 'boring', 'system'
+            'rules', 'break', 'rebel', 'different', 'damn', 'hell', 'fuck',
+            'shit', 'whatever', 'cool', 'awesome', 'badass', 'attitude', 'style',
+            'swagger', 'chill', 'dgaf', 'idgaf', 'boring', 'system', 'nobody',
+            'alone', 'savage', 'sick', 'dope', 'lit', 'fire', 'bro',
+            'aukaat', 'bakwas', 'chod', 'apna', 'mera', 'akela'
         ],
         'dialogue_patterns': [
             r"don't (care|give)",
-            r'my (way|rules)',
+            r'my (way|rules|style)',
             r'screw (this|that|it)',
             r'whatever',
-            r'(boring|stupid) rules'
+            r'(boring|stupid)',
+            r'(fuck|shit|damn)',
+            r'idgaf'
         ]
     },
     
@@ -75,18 +85,19 @@ ARCHETYPES = {
         'traits': ['Caring', 'Supportive', 'Empathetic', 'Nurturing', 'Selfless'],
         'chhichhore_mapping': 'MUMMY',
         'keywords': [
-            'care', 'worry', 'safe', 'okay', 'help', 'support', 'need', 'feel',
-            'hurt', 'sorry', 'comfort', 'protect', 'always here', 'for you',
-            'understand', 'listen', 'there for', 'dont worry', 'everything ok',
-            'how are you', 'take care', 'eat', 'sleep', 'rest', 'health'
+            'worried', 'safe', 'protect', 'comfort', 'always here', 'for you',
+            'hurt', 'crying', 'sad', 'upset', 'hugs', 'miss you', 'love you',
+            'sending', 'prayers', 'bless', 'hospital', 'doctor', 'medicine',
+            'fever', 'sick', 'injured', 'accident', 'emergency', 'careful',
+            'rona', 'dard', 'takleef', 'khana', 'neend', 'dawai', 'theek'
         ],
         'dialogue_patterns': [
-            r'are you (ok|okay|alright)',
-            r"don't worry",
-            r'i care',
-            r'(here|there) for you',
-            r'take care',
-            r'(eat|sleep|rest)'
+            r'are you (hurt|sick|injured)',
+            r'sending (love|hugs|prayers)',
+            r'miss you',
+            r'love you (so much|dear)',
+            r'(worried|scared) about',
+            r'(hospital|doctor|medicine)'
         ]
     },
     
@@ -117,17 +128,20 @@ ARCHETYPES = {
         'traits': ['Funny', 'Easy-going', 'Playful', 'Witty', 'Entertaining'],
         'chhichhore_mapping': 'BEVDA',
         'keywords': [
-            'joke', 'funny', 'laugh', 'haha', 'kidding', 'seriously', 'crazy',
-            'party', 'fun', 'drink', 'celebrate', 'relax', 'chill', 'dude',
-            'bro', 'man', 'hilarious', 'lol', 'lmao', 'comedy', 'prank',
-            'maza', 'masti', 'pagal', 'daaru', 'beer', 'cheers'
+            'joke', 'funny', 'laugh', 'haha', 'hahaha', 'hehe', 'kidding', 'crazy',
+            'party', 'fun', 'drink', 'drunk', 'celebrate', 'dude', 'bruh',
+            'hilarious', 'lol', 'lmao', 'rofl', 'lmfao', 'xd', 'comedy', 'prank',
+            'maza', 'masti', 'pagal', 'daaru', 'beer', 'cheers', 'shots',
+            'bakchodi', 'timepass', 'chutiapa', 'ghanta', 'bsdk', 'bc', 'mc',
+            'wtf', 'tf', 'bruh', 'ded', 'dying', 'dead', 'mood', 'vibe'
         ],
         'dialogue_patterns': [
-            r'(haha|lol|lmao)',
-            r'(joke|joking|kidding)',
-            r'(funny|hilarious)',
-            r'(party|celebrate|drink)',
-            r'(chill|relax|easy)'
+            r'(haha|hahaha|hehe|lol|lmao|lmfao|rofl)',
+            r'(joke|joking|kidding|jk)',
+            r'(funny|hilarious|ded|dying|dead)',
+            r'(party|celebrate|drink|drunk|shots)',
+            r'(bakchodi|masti|pagal)',
+            r'(bruh|dude|bro)'
         ]
     },
     
